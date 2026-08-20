@@ -36,9 +36,7 @@ typedef struct score {
 } score;
 
 typedef struct cfgStruct {
-	int sound;
-	
-	int music;	
+	int	sound;
 
 	int control[2];
 

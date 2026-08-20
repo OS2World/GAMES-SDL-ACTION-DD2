@@ -1,0 +1,7 @@
+DD2 starting
+[audio] conf.sound=3
+[audio] trying Mix_OpenAudio(44100)
+[audio] Mix_OpenAudio(44100) OK
+Unable load bgm: Unrecognized audio format
+Unable load bgm_boss: Unrecognized audio format
+[audio] soundLoad done, efx[0]=0x2003d8e0 bgm=0

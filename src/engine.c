@@ -30,7 +30,7 @@
 
 extern SDL_Surface *screen, *gfx;
 
-extern Mix_Chunk *efx[2];
+extern Mix_Chunk *efx[8];
 extern Mix_Music *bgm, *bgm_boss;
 extern int sound;
 
@@ -75,11 +75,11 @@ engine_init()
 			fprintf(stderr,"ENGINE_ERROR: memory\n");
 			exit(-1);
 		}
-		/*player[1].f=(SDL_Rect *)malloc(sizeof(SDL_Rect)*2);
+		player[1].f=(SDL_Rect *)malloc(sizeof(SDL_Rect)*2);
 		if(!player[1].f) {
 			fprintf(stderr,"ENGINE_ERROR: memory\n");
 			exit(-1);
-		}*/
+		}
 		player[0].f[0].x=2;
 		player[0].f[0].y=2;
 		player[0].f[0].w=20;
@@ -91,19 +91,14 @@ engine_init()
 		player[0].f[1].h=20;
 
 		player[0].nf=2;
-		/* player[0].joy=0; */
 
-		player[0].keys[0]=SDLK_e;//SDLK_LEFT;
-		player[0].keys[1]=SDLK_x;//SDLK_RIGHT;
-		player[0].keys[2]=SDLK_f;//SDLK_UP;
-		player[0].keys[3]=SDLK_d;//SDLK_DOWN;
-		player[0].keys[4]=SDLK_s;//SDLK_RCTRL
-/*#ifndef ALT_FIRE
-		player[0].keys[4]=SDLK_o;//SDLK_RCTRL
-#else
-		player[0].keys[4]=SDLK_m;
-#endif*/
-		/*player[1].f[0].x=2;
+		player[0].keys[0]=SDLK_LEFT;
+		player[0].keys[1]=SDLK_RIGHT;
+		player[0].keys[2]=SDLK_UP;
+		player[0].keys[3]=SDLK_DOWN;
+		player[0].keys[4]=SDLK_SPACE;
+
+		player[1].f[0].x=2;
 		player[1].f[0].y=24;
 		player[1].f[0].w=20;
 		player[1].f[0].h=20;
@@ -114,14 +109,13 @@ engine_init()
 		player[1].f[1].h=20;
 
 		player[1].nf=2;
-		// player[1].joy=0;
 
-		player[1].keys[0]=SDLK_a;//SDLK_a
-		player[1].keys[1]=SDLK_d;//SDLK_d
-		player[1].keys[2]=SDLK_w;//SDLK_w
-		player[1].keys[3]=SDLK_s;//SDLK_s
+		player[1].keys[0]=SDLK_a;
+		player[1].keys[1]=SDLK_d;
+		player[1].keys[2]=SDLK_w;
+		player[1].keys[3]=SDLK_s;
 		player[1].keys[4]=SDLK_LCTRL;
-		*/
+
 		firstInit=1;
 	}
 
@@ -147,9 +141,8 @@ engine_init()
 
 /* ********************* */
 
-/*	player[1].cf=0;
+	player[1].cf=0;
 	player[1].score=0;
-	//player[1].shield=0;
 	player[1].weapon=0;
 	player[1].level=0;
 	player[1].x=200;
@@ -164,7 +157,6 @@ engine_init()
 	player[1].companion=0;
 	player[1].t=0;
 	player[1].cinc=1;
-*/
 
 /* ********************* */
 
@@ -314,7 +306,7 @@ engine_obj()
 			SDL_BlitSurface(gfx, &b, screen, &a);
 		}
 
-		for(i=0;i<1;i++)//i=0;i<2;i++
+		for(i=0;i<2;i++)
 			if(player[i].shield)
 				if(ot->x+10>player[i].x && ot->x+10<player[i].x+20 &&
 					ot->y+10>player[i].y && ot->y+10<player[i].y+20) {
@@ -592,7 +584,7 @@ engine_add_vefx(int type, int x, int y)
 				Mix_PlayChannel(-1,efx[7],0);
 		break;
 		case VFX_STAGE: /* special vefx */
-			vused->ftime=100;//250
+			vused->ftime=250;
 			vused->nf=1;
 			vused->cf=0;
 			if(player[0].shield)

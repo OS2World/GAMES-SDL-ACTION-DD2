@@ -1,0 +1,25 @@
+Dodgin' Diamond II game for OS/2, release 0.2.2 beta
+This is a little shoot'em up arcade game for one or two players.
+
+You should install some dll (and related dependencies), this is the complete 
+list of all packages containing all main dynamic libs (dll) you should 
+have to play Dodgin' Diamond II release 0.2.2. beta on OS/2:
+
+ftp://ftp.netlabs.org/pub/gcc/gcc4core-1_3_1.wpi (*.dll)
+ftp://ftp.netlabs.org/pub/gcc/libc-0.6.6-csd6.zip (*.dll)
+http://hobbes.nmsu.edu/download/pub/os2/dev/SDL-1.2.15-20160303.zip (*.dll)
+
+To install as user, usually executables and libs should be respectively somewhere 
+in path and in libpath statements, unzip and enjoy!
+
+For netlabs.org's yum/rpm system, simply check for:
+
+yum install libc libgcc1 libgcc-fwd libstdc++6 libsupc++6
+
+to install all main necessary packages 
+
+See also the author's README file included.
+
+More info and sources are available at:
+https://www.usebox.net/jjm/dd2/
+Gianfilippo Cimmino (gianfli dot cim @ gmail dot com).

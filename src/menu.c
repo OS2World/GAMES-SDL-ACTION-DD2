@@ -18,8 +18,9 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 */
-#include<SDL.h>
-#include<SDL_mixer.h>
+#include<stdlib.h>
+#include"SDL.h"
+#include"SDL_mixer.h"
 #include"menu.h"
 #include"engine.h"
 #include"cfg.h"
@@ -79,7 +80,7 @@ drawGetName(char *name, int place, int playern)
 
 	writeCString(gfx, screen, 175, 131, buffer, 1);
 
-	SDL_Flip(screen);
+	DD2_Flip();
 }
 
 int
@@ -87,7 +88,7 @@ getName(char *name, int place, int playern)
 {
 	Uint32 tick;
 	SDL_Event mevent;
-	int pos=0;
+	int pos=0, i=0;
 	char ckey='a';
 
 	if(joy[playern-1] && player[playern-1].joy)
@@ -100,10 +101,47 @@ getName(char *name, int place, int playern)
 
 	tick=SDL_GetTicks();
 	while(1) {
-		while(SDL_WaitEvent(&mevent)) {//PollEvent(&mevent)
-    			if (mevent.type==SDL_QUIT)
-    				return 0;
-		
+		while(SDL_PollEvent(&mevent)) {
+			if (mevent.type==SDL_QUIT)
+				return 0;
+
+			/* joystick control */
+			if(joy[playern-1] && player[playern-1].joy)
+			{
+				SDL_JoystickUpdate();
+
+				i=SDL_JoystickGetAxis(joy[playern-1],1);
+				if(i>4200)
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_DOWN;
+				}
+				if(i<-4200)
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_UP;
+				}
+				i=SDL_JoystickGetAxis(joy[playern-1],0);
+				if(i>4200)
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_RIGHT;
+				}
+
+				if(SDL_JoystickGetButton(joy[playern-1], 0))
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_RETURN;
+				}
+
+				if(SDL_JoystickGetButton(joy[playern-1], 1))
+				{
+					pos++;
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_BACKSPACE;
+				}
+			}
+
 			if(mevent.type==SDL_KEYDOWN) {
 				if(mevent.key.keysym.sym==SDLK_ESCAPE) {
 					if(!name[0])
@@ -142,10 +180,10 @@ getName(char *name, int place, int playern)
 
 					continue;
 				}
-			
+
 				if(mevent.key.keysym.sym==SDLK_RIGHT)
 				{
-					if(pos<15) {//8
+					if(pos<8) {
 						name[pos]=ckey;
 						pos++;
 						name[pos]=0;
@@ -155,7 +193,7 @@ getName(char *name, int place, int playern)
 						continue;
 					}
 				}
-				
+
 				if(mevent.key.keysym.sym==SDLK_RETURN)
 					if(name[0]) {
 						/* pirutupiiii */
@@ -178,7 +216,7 @@ getName(char *name, int place, int playern)
 					mevent.key.keysym.sym<=SDLK_z) ||
 					(mevent.key.keysym.sym>=SDLK_0 &&
 					mevent.key.keysym.sym<=SDLK_9)) {
-						if(pos<15) {//8
+						if(pos<8) {
 							name[pos]=SDLK2ascii(mevent.key.keysym.sym);
 							pos++;
 							name[pos]=0;
@@ -198,25 +236,23 @@ void
 drawHiscores(int max)
 {
 	int i;
-	//SDL_Rect a,b;
+	SDL_Rect a,b;
 
 	/* erase the screen */
 	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
 
-	/* DD2 characters
+	/* DD2 characters */
 	a.x=60;
 	a.y=5;
 	b.x=450;
 	b.y=43;
 	b.w=211;
 	b.h=190;
-	SDL_BlitSurface(gfx, &b, screen, &a);*/
+	SDL_BlitSurface(gfx, &b, screen, &a);
 
 	/* header */
 	writeCString(gfx, screen, 80, 2, "the hall of fame", 1);
-	
-	//writeCString(gfx, screen, 65, 125, "requires full version", 1);
-	
+
 	for(i=0;i<max;i++) {
 		writeNumber(gfx, screen, 10, 23+i*17, i+1, 2);
 		writeCString(gfx, screen, 30, 20+i*17, hiscore[i].name, 0);
@@ -226,7 +262,7 @@ drawHiscores(int max)
 		writeNumber(gfx, screen, 260, 23+i*17, hiscore[i].score,6);
 	}
 
-	SDL_Flip(screen);
+	DD2_Flip();
 }
 
 int
@@ -235,8 +271,7 @@ hiscores()
 	Uint32 tick;
 	SDL_Event mevent;
 	int i;
-	
-	drawHiscores(i);
+
 	for(i=0;i<10;i++) {
 		drawHiscores(i+1);
 		SDL_Delay(300);
@@ -244,12 +279,11 @@ hiscores()
 
 	tick=SDL_GetTicks();
 	while(1) {
-		while(SDL_WaitEvent(&mevent)) {//PollEvent(&mevent)
-    		if (mevent.type==SDL_QUIT)
-    			return 0;
+		while(SDL_PollEvent(&mevent)) {
+			if (mevent.type==SDL_QUIT)
+				return 0;
 			if(mevent.type==SDL_KEYDOWN) {
-				if(mevent.key.keysym.sym==SDLK_ESCAPE)
-					return 1;
+				return 1;
 			}
 		}
 		/* wait some time and return */
@@ -259,6 +293,7 @@ hiscores()
 				Mix_PlayChannel(-1,efx[7],0);
 			return 1;
 		}
+		SDL_Delay(10);
 	}
 
 	return 0;
@@ -269,88 +304,118 @@ drawConfigure(int option)
 {
 	/* erase the screen */
 	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
-	
-	/*header*/
-	writeCString(gfx, screen, 105, 2, "options", 1);	
 
 	/* options */
-	
-	
-	writeCString(gfx, screen, 20, 23,  "sound quality", 0);//gfx, screen, 20, 70,  "sound", 0
+	writeCString(gfx, screen, 20, 20,  "player 1", 0);
+	if(conf.control[0]==KEYBOARD)
+		writeCString(gfx, screen, 20, 37,  "   keyboard", (option==1));
+	else
+		writeCString(gfx, screen, 20, 37,  "   joystick 1", (option==1));
+	writeCString(gfx, screen, 20, 54,  "player 2", 0);
+	if(conf.control[1]==KEYBOARD)
+		writeCString(gfx, screen, 20, 71,  "   keyboard", (option==2));
+	else
+		writeCString(gfx, screen, 20, 71,  "   joystick 2", (option==2));
+	writeCString(gfx, screen, 20, 105,  "sound", 0);
 	switch(conf.sound) {
 		default:
 		case SOUND_HI:
-			writeCString(gfx, screen, 20, 45,  "   high", (option==2));//gfx, screen, 20, 87,  "   high", (option==2)//option==3
+			writeCString(gfx, screen, 20, 122,  "   high quality", (option==3));
 		break;
 		case SOUND_MED:
-			writeCString(gfx, screen, 20, 45,  "   medium", (option==2));//3
+			writeCString(gfx, screen, 20, 122,  "   medium quality", (option==3));
 		break;
 		case SOUND_LOW:
-			writeCString(gfx, screen, 20, 45,  "   low", (option==2));//3
+			writeCString(gfx, screen, 20, 122,  "   low quality", (option==3));
 		break;
 		case NO_SOUND:
-			writeCString(gfx, screen, 20, 45,  "   no sound", (option==2));//3
+			writeCString(gfx, screen, 20, 122,  "   no sound", (option==3));
 		break;
 	}
-	writeCString(gfx, screen, 190, 23,  "music", 0);
-	if(conf.music)
-		writeCString(gfx, screen, 180, 45,  "   on", (option==3));
+	writeCString(gfx, screen, 20, 139,  "graphic mode", 0);
+	if(conf.fullscreen)
+		writeCString(gfx, screen, 20, 156,  "   fullscreen", (option==4));
 	else
-		writeCString(gfx, screen, 180, 45,  "   off", (option==3));
+		writeCString(gfx, screen, 20, 156,  "   windowed", (option==4));
 
-	writeCString(gfx, screen, 20, 70,  "controls", 0);//gfx, screen, 20, 23,  "player 1", 0
-	if(conf.control[0]==KEYBOARD){
-		writeCString(gfx, screen, 20, 90,  "   keyboard", (option==1));//gfx, screen, 20, 40,  "   keyboard", (option==1)
-		writeCString(gfx, screen, 110, 115, "up f",1);
-		writeCString(gfx, screen, 25, 140, "left e  down d  right x",1);	
-	} 
-	else {
-		writeCString(gfx, screen, 20, 90,  "   accelerometer", (option==1));
-		writeCString(gfx, screen, 70, 125, "tilt to control",1);		
-		}
-	writeCString(gfx, screen, 80, 165, "tap screen to fire",1);	
-
-	SDL_Flip(screen);
+	DD2_Flip();
 }
 
 int
 configure()
 {
 	SDL_Event mevent;
-	int option=0,i, menu=2;
+	int option=1,i;
+
 	drawConfigure(option);
 
 	while(1) {
-		while(SDL_WaitEvent(&mevent)) {
-    			if (mevent.type==SDL_QUIT)
-    				return 0;
+		while(SDL_PollEvent(&mevent)) {
+			if (mevent.type==SDL_QUIT)
+				return 0;
 
-			if (mevent.type == SDL_MOUSEBUTTONDOWN) {
-				//SDL_GetMouseState(&mouse_x, &mouse_y);
-				//printf("mouse x: %i, Mouse y:%i\n",mouse_x, mouse_y);                		
-				option=clickDetect(menu, mevent.button.button, mevent.button.x,mevent.button.y);
-				//printf("option %i\n",option);				
-				//drawConfigure(option);
-				mevent.type=SDL_KEYDOWN;
-				mevent.key.keysym.sym=SDLK_RETURN;
-				SDL_Delay(200);
+			/* Alt+Enter: toggle fullscreen */
+			if(mevent.type==SDL_KEYDOWN
+				&& mevent.key.keysym.sym==SDLK_RETURN
+				&& (mevent.key.keysym.mod & KMOD_ALT)) {
+				DD2_ToggleFullscreen();
+				conf.fullscreen = !conf.fullscreen;
+				drawConfigure(option);
+				continue;
+			}
+
+			/* Ctrl+X: exit immediately */
+			if(mevent.type==SDL_KEYDOWN
+				&& mevent.key.keysym.sym==SDLK_x
+				&& (mevent.key.keysym.mod & KMOD_CTRL)) {
+				exit(0);
+			}
+
+			/* joystick control for the menu */
+			if(joy[0])
+			{
+				SDL_JoystickUpdate();
+
+				i=SDL_JoystickGetAxis(joy[0],1);
+				if(i>4200)
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_DOWN;
+				}
+				if(i<-4200)
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_UP;
+				}
+
+				if(SDL_JoystickGetButton(joy[0], 0))
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_RETURN;
+				}
+
+				if(SDL_JoystickGetButton(joy[0], 1))
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_ESCAPE;
+				}
 			}
 
 			if(mevent.type==SDL_KEYDOWN) {
 				if(mevent.key.keysym.sym==SDLK_ESCAPE)
 					return 1;
 				if(mevent.key.keysym.sym==SDLK_DOWN ||
-					mevent.key.keysym.sym==SDLK_d) {
+					mevent.key.keysym.sym==SDLK_s) {
 					option++;
-					if(option>3)//4
+					if(option>4)
 						option=1;
 					drawConfigure(option);
 				}
 				if(mevent.key.keysym.sym==SDLK_UP ||
-					mevent.key.keysym.sym==SDLK_f) {
+					mevent.key.keysym.sym==SDLK_w) {
 					option--;
 					if(option<1)
-						option=3;//4
+						option=4;
 					drawConfigure(option);
 				}
 				if(mevent.key.keysym.sym==SDLK_RETURN) {
@@ -363,23 +428,29 @@ configure()
 								drawConfigure(option);
 							}
 						break;
-						case 2://3
+						case 2:
+							if(joy[1]) {
+								conf.control[1]=conf.control[1] ? 0 : 1;
+								drawConfigure(option);
+							}
+						break;
+						case 3:
 							conf.sound--;
 							if(conf.sound<0)
 								conf.sound=3;
 
 							if(sound) {
-								/*if(bgm) {
+								if(bgm) {
 									Mix_FreeMusic(bgm);
 									bgm=NULL;
-								}*/
+								}
 
 								for(i=0;i<NUM_EFX;i++)
 									if(efx[i]) {
 										Mix_FreeChunk(efx[i]);
 										efx[i]=NULL;
 									}
-								//Mix_CloseAudio();
+								Mix_CloseAudio();
 							}
 
 							if(conf.sound!=NO_SOUND) {
@@ -407,25 +478,16 @@ configure()
 							}
 							drawConfigure(option);
 						break;
-						case 3:
-							conf.music=conf.music ? 0 : 1;
-							drawConfigure(option);
-								if(conf.music==0){
-									if(bgm){
-										Mix_FreeMusic(bgm);
-										bgm=NULL;
-									}
-								} else 
-									soundLoad();		
-						break;
-						/*case 4:
+						case 4:
 							conf.fullscreen=conf.fullscreen ? 0 : 1;
+							DD2_ToggleFullscreen();
 							drawConfigure(option);
-						break;*/
+						break;
 					}
 				}
 			}
 		}
+		SDL_Delay(10);
 	}
 
 	return 0;
@@ -440,38 +502,39 @@ drawMenu(int option)
 	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
 
 	/* BETA */
-	a.x=97;//77
+	a.x=77;
 	a.y=20;
 	b.x=100;
 	b.y=46;
-	b.w=125;//166
+	b.w=166;
 	b.h=15;
 	SDL_BlitSurface(gfx, &b, screen, &a);
 
 	/* options */
-	writeCString(gfx, screen, 105, 50,  "play", (option==1));//orig diff=17 now 26
-	writeCString(gfx, screen, 105, 76, "hall of fame", (option==2));//105, 94  option==3
-	writeCString(gfx, screen, 105, 102, "options", (option==3));//105, 111 option==4
-	writeCString(gfx, screen, 105, 128, "about", (option==4));//105, 138 option==5
-	writeCString(gfx, screen, 105, 154, "exit game", (option==5));//105, 155 option==6
+	writeCString(gfx, screen, 105, 50,  "one player", (option==1));
+	writeCString(gfx, screen, 105, 67,  "two players", (option==2));
+	writeCString(gfx, screen, 105, 94, "hall of fame", (option==3));
+	writeCString(gfx, screen, 105, 111, "configure", (option==4));
+	writeCString(gfx, screen, 105, 138, "about", (option==5));
+	writeCString(gfx, screen, 105, 155, "exit game", (option==6));
 
-	/* some credit
+	/* some credit */
 	a.x=154;
 	a.y=184;
 	b.x=268;
 	b.y=57;
 	b.w=166;
 	b.h=16;
-	SDL_BlitSurface(gfx, &b, screen, &a);*/
+	SDL_BlitSurface(gfx, &b, screen, &a);
 
-	SDL_Flip(screen);
+	DD2_Flip();
 }
 
 int
 menu()
 {
 	SDL_Event mevent;
-	int option=0, menu=1; //option=1
+	int option=1, i;
 
 	/* pirutupiiii */
 	if(efx[7])
@@ -483,45 +546,70 @@ menu()
 	scroll=scroll2=0;
 
 	while(1) {
-		while(SDL_WaitEvent(&mevent)) {
+		while(SDL_PollEvent(&mevent)) {
 			if (mevent.type==SDL_QUIT)
 				return 0;
 
-			if (mevent.type == SDL_MOUSEBUTTONDOWN) {
-				//SDL_GetMouseState(&mouse_x, &mouse_y);
-				//printf("mouse x: %i, Mouse y:%i\n",mouse_x, mouse_y);                		
-				option=clickDetect(menu, mevent.button.button, mevent.button.x,mevent.button.y);
-				//printf("option %i\n",option);				
-				drawMenu(option);
-				SDL_Delay(200);
-				mevent.type=SDL_KEYDOWN;
-				mevent.key.keysym.sym=SDLK_RETURN;
+			/* Alt+Enter: toggle fullscreen */
+			if(mevent.type==SDL_KEYDOWN
+				&& mevent.key.keysym.sym==SDLK_RETURN
+				&& (mevent.key.keysym.mod & KMOD_ALT)) {
+				DD2_ToggleFullscreen();
+				continue;
 			}
-			/*if (mevent.type == SDL_MOUSEBUTTONUP){	
-				
-			}*/
 
-			/*if(SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1))
+			/* Ctrl+X: exit immediately */
+			if(mevent.type==SDL_KEYDOWN
+				&& mevent.key.keysym.sym==SDLK_x
+				&& (mevent.key.keysym.mod & KMOD_CTRL)) {
+				exit(0);
+			}
+
+			/* joystick control for the menu */
+			if(joy[0])
+			{
+				SDL_JoystickUpdate();
+
+				i=SDL_JoystickGetAxis(joy[0],1);
+				if(i>4200)
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_DOWN;
+				}
+				if(i<-4200)
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_UP;
+				}
+
+				if(SDL_JoystickGetButton(joy[0], 0))
 				{
 					mevent.type=SDL_KEYDOWN;
 					mevent.key.keysym.sym=SDLK_RETURN;
-				}*/
-			
+				}
+
+				if(SDL_JoystickGetButton(joy[0], 1))
+				{
+					mevent.type=SDL_KEYDOWN;
+					mevent.key.keysym.sym=SDLK_ESCAPE;
+				}
+			}
+
 			if(mevent.type==SDL_KEYDOWN) {
 				if(mevent.key.keysym.sym==SDLK_ESCAPE)
 					return 0;
 				if(mevent.key.keysym.sym==SDLK_DOWN ||
-					mevent.key.keysym.sym==SDLK_d) {//SDLK_s
+					mevent.key.keysym.sym==SDLK_s) {
 					option++;
-					if(option>5)//6
+					if(option>6)
 						option=1;
 					drawMenu(option);
 				}
 				if(mevent.key.keysym.sym==SDLK_UP ||
-					mevent.key.keysym.sym==SDLK_f) {//SDLK_w
+					mevent.key.keysym.sym==SDLK_w) {
 					option--;
 					if(option<1)
-						option=5;
+						option=6;
 					drawMenu(option);
 				}
 				if(mevent.key.keysym.sym==SDLK_RETURN) {
@@ -534,29 +622,35 @@ menu()
 							player[0].score=player[1].score=0;
 							player[0].stage=player[1].stage=0;
 							return 1;
-						
-						case 2://3
+						case 2:
+							player[0].shield=10;
+							player[1].shield=10;
+							player[0].score=player[1].score=0;
+							player[0].stage=player[1].stage=0;
+							return 1;
+						case 3:
 							if(!hiscores())
 								return 0;
 							drawMenu(option);
 						break;
-						case 3://4
+						case 4:
 							if(!configure())
 								return 0;
 							drawMenu(option);
 						break;
-						case 4://5
+						case 5:
 							if(!credits())
 								return 0;
 							drawMenu(option);
 						break;
-						case 5://6
+						case 6:
 							return 0;
 						break;
 					}
 				}
 			}
 		}
+		SDL_Delay(10);
 	}
 
 	return 0;
@@ -566,25 +660,25 @@ void
 drawCredits()
 {
 	SDL_Rect a,b;
-	
+
 	/* erase the screen */
 	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
 
-	/* BETA */ 
-	a.x=97;//77
+	/* BETA */
+	a.x=77;
 	a.y=20;
 	b.x=100;
 	b.y=46;
-	b.w=125;//166
+	b.w=166;
 	b.h=15;
 	SDL_BlitSurface(gfx, &b, screen, &a);
 
-	writeCString(gfx, screen, 20, 50, "this is dd2 free version", 0);
-	writeCString(gfx, screen, 20, 80, "ported by", 1);
-	writeCString(gfx, screen, 40, 105, "trilli technology", 0);
-	writeCString(gfx, screen, 55, 145, "try the full version", 1);
-	
-	SDL_Flip(screen);
+	writeCString(gfx, screen, 20, 50, "this is dd2 version " VERSION ".", 0);
+	writeCString(gfx, screen, 20, 80, "main author", 1);
+	writeCString(gfx, screen, 40, 105, "juan j. martinez", 0);
+	writeCString(gfx, screen, 40, 140, "thanks you for playing...", 0);
+
+	DD2_Flip();
 }
 
 int
@@ -597,12 +691,11 @@ credits()
 
 	tick=SDL_GetTicks();
 	while(1) {
-		while(SDL_WaitEvent(&mevent)) {//PollEvent(&mevent)
-    		if (mevent.type==SDL_QUIT)
-    			return 0;
+		while(SDL_PollEvent(&mevent)) {
+			if (mevent.type==SDL_QUIT)
+				return 0;
 			if(mevent.type==SDL_KEYDOWN) {
-				if(mevent.key.keysym.sym==SDLK_ESCAPE)
-					return 1;
+				return 1;
 			}
 		}
 		/* wait some time and return */
@@ -612,58 +705,8 @@ credits()
 				Mix_PlayChannel(-1,efx[7],0);
 			return 1;
 		}
+		SDL_Delay(10);
 	}
 
 	return 0;
-}
-
-int 
-clickDetect(int menu,int button, int x, int y){
-int option=0;
-	
-	if (menu==1){
-		// check the other hotspots
-		if (x > PLAYBOXSTARTX && x < PLAYBOXLENGTH+PLAYBOXSTARTX && y > PLAYBOXSTARTY && y < PLAYBOXSTARTY+PLAYBOXHEIGHT){
-			// enter has been pressed
-			//printf("Play\n");
-			option=1;			
-		}
-		
-		if (x > HOFBOXSTARTX && x < HOFBOXLENGTH+HOFBOXSTARTX && y > HOFBOXSTARTY && y < HOFBOXSTARTY+HOFBOXHEIGHT){
-			// clear has been pressed
-			option=2;
-		}
-
-		if (x > OPTIONBOXSTARTX && x < OPTIONBOXLENGTH+OPTIONBOXSTARTX && y > OPTIONBOXSTARTY && y < OPTIONBOXSTARTY+OPTIONBOXHEIGHT){
-			// shuffle has been pressed
-			option=3;
-		}
-
-		if (x > ABOUTBOXSTARTX && x < ABOUTBOXLENGTH+ABOUTBOXSTARTX && y > ABOUTBOXSTARTY && y < ABOUTBOXSTARTY+ABOUTBOXHEIGHT){
-			// solve has been pressed
-			option=4;
-		}
-
-		if (x > QUITBOXSTARTX && x < QUITBOXLENGTH+QUITBOXSTARTX && y > QUITBOXSTARTY && y < QUITBOXSTARTY+QUITBOXHEIGHT){
-			// quit has been pressed
-			option=5;
-		}
-	}
-	if(menu==2){
-		if (x > QUALITYBOXSTARTX && x < QUALITYBOXLENGTH+QUALITYBOXSTARTX && y > QUALITYBOXSTARTY && y < QUALITYBOXSTARTY+QUALITYBOXHEIGHT){
-			// enter has been pressed
-			option=2;			
-		}
-		
-		if (x > MUSICBOXSTARTX && x < MUSICBOXLENGTH+MUSICBOXSTARTX && y > MUSICBOXSTARTY && y < MUSICBOXSTARTY+MUSICBOXHEIGHT){
-			// clear has been pressed
-			option=3;
-		}
-
-		if (x > CONTROLBOXSTARTX && x < CONTROLBOXLENGTH+CONTROLBOXSTARTX && y > CONTROLBOXSTARTY && y < CONTROLBOXSTARTY+CONTROLBOXHEIGHT){
-			// shuffle has been pressed
-			option=1;
-		}
-	}
-return option;
 }

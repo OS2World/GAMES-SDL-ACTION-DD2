@@ -30,4 +30,7 @@ void drawPanel(SDL_Surface *src, SDL_Surface *dst, pDesc *player);
 void writeCString(SDL_Surface *src, SDL_Surface *dst, int x, int y, char *str, int color);
 char SDLK2ascii(int sym);
 
+void DD2_Flip(void);
+void DD2_ToggleFullscreen(void);
+
 #endif

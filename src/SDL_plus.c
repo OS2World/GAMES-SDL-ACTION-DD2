@@ -21,6 +21,11 @@
 #include"SDL_plus.h"
 #include<string.h>
 
+extern SDL_Surface *screen;
+extern SDL_Window *window;
+extern SDL_Renderer *renderer;
+extern SDL_Texture *screen_texture;
+
 SDL_Surface *
 loadBMP(char *file)
 {
@@ -28,13 +33,10 @@ loadBMP(char *file)
 
 	a=SDL_LoadBMP(file);
 	if(!a)
-	return NULL;
-
-	SDL_SetColorKey(a,(SDL_SRCCOLORKEY|SDL_RLEACCEL), SDL_MapRGB(a->format, 255, 0, 255));
-
-	b=SDL_DisplayFormatAlpha(a);
+		return NULL;
+	b=SDL_ConvertSurfaceFormat(a, SDL_PIXELFORMAT_RGB565, 0);
 	if(!b)
-	return NULL;
+		return NULL;
 
 	SDL_FreeSurface(a);
 	return b;
@@ -49,7 +51,7 @@ writeNumber(SDL_Surface *src, SDL_Surface *dst, int x, int y, int number, int pa
 
 	sprintf(fmt,"%%.%ii",padd);
 	sprintf(buffer,fmt,number);
-	
+
 	a.y=y;
 	a.w=8;
 	a.h=12;
@@ -63,26 +65,26 @@ writeNumber(SDL_Surface *src, SDL_Surface *dst, int x, int y, int number, int pa
 	}
 }
 
-void 
+void
 drawPanel(SDL_Surface *src, SDL_Surface *dst, pDesc *player)
 {
 	SDL_Rect a,b;
 	int i;
-	
+
 	a.x=0;
 	a.y=0;
-	/*player game info scr/life/weapon*/
+
 	b.x=2;
 	b.y=83;
 	b.h=34;
 	b.w=95;
 	SDL_BlitSurface(src, &b, dst, &a);
 
-	/*a.x=SCREENW-b.w;
+	a.x=SCREENW-b.w;
 	b.x=2;
-	b.y=47;	
-	SDL_BlitSurface(src, &b, dst, &a);*/
-	
+	b.y=47;
+	SDL_BlitSurface(src, &b, dst, &a);
+
 	/* GAME OVER */
 	if(!player[0].shield && !player[1].shield) {
 		a.x=(SCREENW/2)-70;
@@ -90,13 +92,13 @@ drawPanel(SDL_Surface *src, SDL_Surface *dst, pDesc *player)
 		b.x=100;
 		b.y=89;
 		b.h=19;
-		b.w=140;	
+		b.w=140;
 		SDL_BlitSurface(src, &b, dst, &a);
 		return;
 	}
-	
-	for(i=0;i<1;i++) {
-		
+
+	for(i=0;i<2;i++) {
+
 		if(!player[i].shield)
 			continue;
 
@@ -131,7 +133,7 @@ drawPanel(SDL_Surface *src, SDL_Surface *dst, pDesc *player)
 		b.y=62;
 		b.w=(player[i].shield*38)/10;
 		b.h=9;
-		a.y=4;		
+		a.y=4;
 		if(i) {
 			b.x=139;
 			a.x=SCREENW-(54+38)+(38-b.w);
@@ -149,7 +151,7 @@ static const struct font_descr_struct {
 
 	char key;
 	SDL_Rect font_rect;
-	
+
 } font_descr[]= {
 	{ 'a', { 288,0,12,17 } }, /* a */
 	{ 'b', { 302,0,11,17 } }, /* b */
@@ -304,3 +306,19 @@ SDLK2ascii(int sym)
 	return ' ';
 }
 
+void DD2_Flip(void)
+{
+	SDL_UpdateTexture(screen_texture, NULL, screen->pixels, screen->pitch);
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, screen_texture, NULL, NULL);
+	SDL_RenderPresent(renderer);
+}
+
+void DD2_ToggleFullscreen(void)
+{
+	Uint32 flags = SDL_GetWindowFlags(window);
+	if (flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP))
+		SDL_SetWindowFullscreen(window, 0);
+	else
+		SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+}

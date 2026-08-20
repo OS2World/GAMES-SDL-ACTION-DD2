@@ -1,0 +1,41 @@
+# Makefile.os2 -- ArcaOS/OS2 build with GCC + SDL2
+
+CC = gcc
+CFLAGS = -O2 -Wall \
+         -Wno-unused-result \
+         -Wno-format-truncation \
+         -I/@unixroot/usr/include/SDL2 \
+         -D__OS2__ \
+         -DPACKAGE=\"dd2\" \
+         -DVERSION=\"1.0\" \
+         -DDD2_DATA=\"data\" \
+         -Isrc
+
+LDFLAGS = -Zhigh-mem -Zmap -Zomf
+
+LIBS = -lSDL2 -lSDL2_mixer -lm
+
+SRCS = src/main.c \
+       src/SDL_plus.c \
+       src/control.c \
+       src/engine.c \
+       src/cfg.c \
+       src/menu.c
+
+OBJS = $(SRCS:.c=.o)
+
+TARGET = dd2.exe
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS) src/dd2.def
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) src/dd2.def $(LIBS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+clean:
+	rm -f $(TARGET) dd2.map
+	find src -name '*.o' | xargs rm -f
+
+.PHONY: all clean

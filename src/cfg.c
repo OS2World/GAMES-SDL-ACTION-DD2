@@ -28,18 +28,18 @@ loadCFG(char *path, cfg *c)
 {
 	FILE *f;
 	char buffer[512];
-	
+	cfg tmp;
+
 	/* defaults */
-	c->sound=SOUND_HI;
-	c->music=1;
-	c->control[0]=KEYBOARD;
-	c->control[1]=KEYBOARD;
-	c->fullscreen=0;
-	
+	tmp.sound=SOUND_HI;
+	tmp.control[0]=KEYBOARD;
+	tmp.control[1]=KEYBOARD;
+	tmp.fullscreen=0;
+
 	f=fopen(path,"rt");
 	if(!f)
 		return 0;
-	
+
 	if(fscanf(f,"%511[^\n]\n",buffer)!=1) {
 		fclose(f);
 		return 0;
@@ -48,8 +48,8 @@ loadCFG(char *path, cfg *c)
 		fclose(f);
 		return 0;
 	}
-	if(fscanf(f,"SOUND=%i\nMUSIC=%i\nCONTROL_1=%i\nCONTROL_2=%i\nFULL_SCREEN=%i\n",
-			&c->sound,&c->music,&c->control[0],&c->control[1], &c->fullscreen)!=5) {
+	if(fscanf(f,"SOUND=%i\nCONTROL_1=%i\nCONTROL_2=%i\nFULL_SCREEN=%i\n",
+			&tmp.sound,&tmp.control[0],&tmp.control[1],&tmp.fullscreen)!=4) {
 		fclose(f);
 		return 0;
 	}
@@ -62,26 +62,26 @@ loadCFG(char *path, cfg *c)
 		fclose(f);
 		return 0;
 	}
-	
-	fclose(f);
 
+	fclose(f);
+	*c=tmp;
 	return 1;
 }
 
 int
 saveCFG(char *path, cfg *c)
 {
-	FILE *f;	
-	
+	FILE *f;
+
 	f=fopen(path,"wt");
 	if(!f)
 		return 0;
-	
+
 	fprintf(f,"BEGIN\n");
-	
-	fprintf(f,"SOUND=%i\nMUSIC=%i\nCONTROL_1=%i\nCONTROL_2=%i\nFULL_SCREEN=%i\n",
-			c->sound,c->music,c->control[0],c->control[1], c->fullscreen);
-	
+
+	fprintf(f,"SOUND=%i\nCONTROL_1=%i\nCONTROL_2=%i\nFULL_SCREEN=%i\n",
+			c->sound,c->control[0],c->control[1], c->fullscreen);
+
 	fprintf(f,"END\n");
 
 	fclose(f);
@@ -108,7 +108,7 @@ loadScore(char *path, score *hisc)
 		return 0;
 
 	for(i=0;i<10;i++)
-		if(fscanf(f,"%15[^:]:%i:%i\n", hisc[i].name, &hisc[i].stage,//8
+		if(fscanf(f,"%8[^:]:%i:%i\n", hisc[i].name, &hisc[i].stage,
 			&hisc[i].score)!=3) {
 				fclose(f);
 				return 0;

@@ -24,92 +24,81 @@
 #include "SDL_plus.h"
 
 extern bool pause;
-//extern event;
-//SDL_Event tevent;
+
+/* map SDL keycode to SDL2 keyboard state index (SDL2 uses scancodes) */
+#define KDOWN(keys, k) ((keys)[SDL_GetScancodeFromKey(k)])
 
 void control_player_joy(SDL_Joystick *joy, pDesc *p)
 {
-	Uint8* keys;
-	Uint8* mousebut;
-	
-	keys=SDL_GetKeyState(NULL);		
-	mousebut=SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1);	
-	
 	int x,y,but;
-	
+
 	if(pause)
 		return;
 
 	SDL_JoystickUpdate();
 	x=SDL_JoystickGetAxis(joy,0);
 	y=SDL_JoystickGetAxis(joy,1);
-	
-	if(x<-16800) {//-4200 //21000
-		p->incy=+1;
-	} 
-		
-	if(x>-10500) {//4200
-		p->incy=-1;		
-	}		
-	
-	if(y<-4200) {	
+
+	if(x<-4200) {
 		p->incx=-1;
 	}
-	
-	if(y>4200) {
+	if(x>4200) {
 		p->incx=+1;
 	}
+	if(y<-4200) {
+		p->incy=-1;
+	}
+	if(y>4200) {
+		p->incy=+1;
+	}
 
-	if(x>-16800 && x<-10500) //-21000
-		p->incy=0;
+	if(x>-4200 && x<4200)
+		p->incx=0;
 
 	if(y>-4200 && y<4200)
-		p->incx=0;
-		
-	if((mousebut||keys[p->keys[4]]) && !p->fire)//mousebut && !p->fire
+		p->incy=0;
+
+	but=SDL_JoystickGetButton(joy, 0);
+
+	if(but && !p->fire)
 		p->fire=1;
-	if(!mousebut && !keys[p->keys[4]])//!mousebut
+	if(!but)
 		p->fire=0;
 }
 
 void control_player(pDesc *p)
 {
-	Uint8* keys;
-	Uint8* mousebut;
+	const Uint8 *keys;
 
-	keys=SDL_GetKeyState(NULL);	
-	mousebut=SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1);	
-	
+	keys=SDL_GetKeyboardState(NULL);
 
 	if(pause)
 		return;
-	
-	if(keys[p->keys[0]]) {
+
+	if(KDOWN(keys,p->keys[0])) {
 		p->incx=-1;
 	}
-	if(keys[p->keys[1]]) {
+	if(KDOWN(keys,p->keys[1])) {
 		p->incx=+1;
-	}		
-	if(keys[p->keys[2]]) {
+	}
+	if(KDOWN(keys,p->keys[2])) {
 		p->incy=-1;
 	}
-	if(keys[p->keys[3]]) {
+	if(KDOWN(keys,p->keys[3])) {
 		p->incy=+1;
 	}
-		
-	if((!keys[p->keys[2]] && !keys[p->keys[3]]) ||
-		(keys[p->keys[2]] && keys[p->keys[3]])) {
+
+	if((!KDOWN(keys,p->keys[2]) && !KDOWN(keys,p->keys[3])) ||
+		(KDOWN(keys,p->keys[2]) && KDOWN(keys,p->keys[3]))) {
 			p->incy=0;
 	}
-	if((!keys[p->keys[0]] && !keys[p->keys[1]]) ||
-		(keys[p->keys[0]] && keys[p->keys[1]])) {
+	if((!KDOWN(keys,p->keys[0]) && !KDOWN(keys,p->keys[1])) ||
+		(KDOWN(keys,p->keys[0]) && KDOWN(keys,p->keys[1]))) {
 			p->incx=0;
 	}
-	
-	//if(keys[p->keys[4]]&& !p->fire)//keys[p->keys[4]] && !p->fire    mousebut && !p->fire 
-	//	p->fire=1;
-	if((mousebut||keys[p->keys[4]]) && !p->fire)//keys[p->keys[4]] && !p->fire    mousebut && !p->fire 
+
+	if(KDOWN(keys,p->keys[4]) && !p->fire)
 		p->fire=1;
-	if(!mousebut && !keys[p->keys[4]])//!keys[p->keys[4]] !mousebut || 
+	if(!KDOWN(keys,p->keys[4]))
 		p->fire=0;
 }
