@@ -163,3 +163,7 @@ Original source: https://jjmtactics.itch.io/dodgin-diamond-2
 Licensed under the GNU General Public License v2 or later.
 
 ArcaOS/OS2 SDL2 port based on the 0.2.2 upstream source release.
+
+## Links
+- Official Site: https://www.usebox.net/jjm/dd2/
+- ArcaOS Port: https://github.com/OS2World/GAMES-ACTION-DD2
