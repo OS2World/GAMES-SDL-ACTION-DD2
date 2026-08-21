@@ -4,6 +4,9 @@
 
 A shoot-em-up arcade game originally written by Juan J. Martinez. This repository contains an ArcaOS/OS2 port based on the upstream 0.2.2 source, migrated from SDL1 to SDL2.
 
+
+![DD2 ScreenShot](/doc/DD2.png)
+
 ---
 
 ## What Changed from 0.2.2
